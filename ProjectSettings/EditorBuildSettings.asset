@@ -6,8 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/MuseumScene.unity
+    guid: cfd64f9fb2cce0b4f889d4225c980295
+  - enabled: 1
+    path: Assets/Scenes/MuseumCorridor.unity
+    guid: aaf980807f6e8174880863af4c2f58e7
+  - enabled: 1
+    path: Assets/Scenes/QuizRoomScene.unity
+    guid: 586ac722a72d07c41b6c85b7b7e37c91
+  - enabled: 1
+    path: Assets/Scenes/galleryscene.unity
+    guid: 0a33732bad67c004e9dfde580477a752
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
