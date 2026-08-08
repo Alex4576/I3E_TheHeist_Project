@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 48ac6db87c354cc48b668858f9156914
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - mainCamera: {fileID: 9005220659476430823, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
+  - quizCamera: {fileID: 3662936645963801524, guid: bb6858362d636774aa8a4652a65eb818, type: 3}
+  - quizUI: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

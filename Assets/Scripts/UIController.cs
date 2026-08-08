@@ -6,10 +6,12 @@ public class UIController : MonoBehaviour
     public static string actionText;
     public static string commandText;
     public static bool uiActive;
+    public static bool interactionEnabled = true;
 
     [SerializeField] GameObject actionBox;
     [SerializeField] GameObject commandBox;
     [SerializeField] GameObject interactCross;
+    [SerializeField] GameObject nonInteractCross;
 
     [SerializeField] float interactDistance = 5f;
 
@@ -22,7 +24,10 @@ public class UIController : MonoBehaviour
 
     void Update()
     {
-        CheckInteraction();
+        if (interactionEnabled)
+        {
+            CheckInteraction();
+        }
 
         if (uiActive == true)
         {
@@ -77,6 +82,32 @@ public class UIController : MonoBehaviour
                     }
                 }
             }
+
+            QuizKiosk quizKiosk =
+                hit.collider.GetComponentInParent<QuizKiosk>();
+
+            if (quizKiosk != null)
+            {
+                actionText = "Crime Prevention Quiz";
+                commandText = "[E] Interact";
+                uiActive = true;
+
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    quizKiosk.StartQuiz();
+                }
+            }
         }
+    }
+
+    public void HideInteractionUI()
+    {
+        interactionEnabled = false;
+        uiActive = false;
+
+        actionBox.SetActive(false);
+        commandBox.SetActive(false);
+        interactCross.SetActive(false);
+        nonInteractCross.SetActive(false);
     }
 }
