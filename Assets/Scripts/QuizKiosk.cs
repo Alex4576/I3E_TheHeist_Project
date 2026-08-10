@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using System.Collections;
 
 public class QuizKiosk : MonoBehaviour
@@ -25,6 +26,9 @@ public class QuizKiosk : MonoBehaviour
 
     [Header("Interaction")]
     public UIController uiController;
+
+    [Header("Lift")]
+    public LiftDoor liftDoor;
 
     private int currentQuestion = 0;
 
@@ -55,6 +59,18 @@ public class QuizKiosk : MonoBehaviour
         }
 
         SetupQuestions();
+    }
+
+    void Update()
+    {
+        // ESC can only exit while the player is on the quiz homepage
+        if (quizUI.activeSelf && homePanel.activeSelf)
+        {
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                ExitQuiz();
+            }
+        }
     }
 
     public void StartQuiz()
@@ -184,9 +200,14 @@ public class QuizKiosk : MonoBehaviour
             completePanel.SetActive(true);
         }
 
-        Debug.Log("QUIZ COMPLETE");
-    }
+        if (liftDoor != null)
+        {
+            liftDoor.UnlockLift();
+        }
 
+        Debug.Log("QUIZ COMPLETE - LIFT UNLOCKED");
+    }
+    
     Button[] GetAnswerButtons(GameObject panel)
     {
         Button[] buttons = new Button[4];
@@ -222,5 +243,31 @@ public class QuizKiosk : MonoBehaviour
     public void CloseWrongPanel()
     {
         wrongPanel.SetActive(false);
+    }
+
+    public void ExitQuiz()
+    {
+        quizCamera.enabled = false;
+        mainCamera.enabled = true;
+
+        quizUI.SetActive(false);
+
+        uiController.ShowInteractionUI();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    public void ExitCompletedQuiz()
+    {
+        quizCamera.enabled = false;
+        mainCamera.enabled = true;
+
+        quizUI.SetActive(false);
+
+        uiController.ShowInteractionUI();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }

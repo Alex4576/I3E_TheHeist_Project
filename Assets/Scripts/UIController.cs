@@ -110,4 +110,15 @@ public class UIController : MonoBehaviour
         interactCross.SetActive(false);
         nonInteractCross.SetActive(false);
     }
+
+    public void ShowInteractionUI()
+    {
+        interactionEnabled = true;
+        uiActive = false;
+
+        nonInteractCross.SetActive(true);
+        interactCross.SetActive(false);
+        actionBox.SetActive(false);
+        commandBox.SetActive(false);
+    }
 }

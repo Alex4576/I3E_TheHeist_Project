@@ -59,5 +59,15 @@ public class LiftDoor : MonoBehaviour
         {
             showLockedMessage = true;
         }
+        else
+        {
+            isOpen = true;
+        }
+    }
+
+    public void UnlockLift()
+    {
+        isLocked = false;
+        showLockedMessage = false;
     }
 }
