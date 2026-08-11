@@ -6,8 +6,6 @@ using TMPro;
 /// <summary>
 /// PlayerScript.cs
 /// Handles player persistence across scenes, teleportation to SpawnPoints,
-/// and interaction with NPC objects (CCTV repair, Hacker catch).
-/// Shows UI prompt only for CCTV repair.
 /// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Robber catch).
 /// Prompts are shown via UIController if assigned, otherwise fall back to interactionText.
 /// </summary>
@@ -15,6 +13,9 @@ public class PlayerScript : MonoBehaviour
 {
     [Header("Interaction Settings")]
     [SerializeField] float interactDistance = 3f;          // Max distance for raycast interaction
+    [SerializeField] Camera playerCamera;                   // First-person camera
+    [SerializeField] TMP_Text interactionText;              // Fallback UI prompt text
+    [SerializeField] UIController uiController;             // Preferred UI prompt system
     [SerializeField] Camera playerCamera;                  // First-person camera
     [SerializeField] TMP_Text interactionText;             // UI prompt text (only for CCTV)
     [SerializeField] UIController uiController;
