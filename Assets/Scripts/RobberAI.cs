@@ -61,7 +61,6 @@ public class RobberAI : MonoBehaviour
 
     private float roamTimer;
     private float stealTimer;
-    private Animator animator;
     private float scoutTimer;
     private float huntTimer;
     private float avoidRepathTimer;

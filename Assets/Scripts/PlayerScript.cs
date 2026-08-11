@@ -16,9 +16,6 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] Camera playerCamera;                   // First-person camera
     [SerializeField] TMP_Text interactionText;              // Fallback UI prompt text
     [SerializeField] UIController uiController;             // Preferred UI prompt system
-    [SerializeField] Camera playerCamera;                  // First-person camera
-    [SerializeField] TMP_Text interactionText;             // UI prompt text (only for CCTV)
-    [SerializeField] UIController uiController;
 
     void Awake()
     {
@@ -30,8 +27,6 @@ public class PlayerScript : MonoBehaviour
         }
 
         // Keep this Player alive across scene loads (persists the whole hierarchy root)
-        DontDestroyOnLoad(transform.root.gameObject);
-        // Keep this Player alive across scene loads
         DontDestroyOnLoad(transform.root.gameObject);
     }
 
@@ -52,8 +47,6 @@ public class PlayerScript : MonoBehaviour
         // UIController lives in the scene (not persisted), so re-find it after every load
         uiController = FindFirstObjectByType<UIController>();
 
-        uiController = FindFirstObjectByType<UIController>();
-        
         // Reset UI prompt when entering new scene
         if (interactionText != null)
             interactionText.gameObject.SetActive(false);
@@ -81,41 +74,16 @@ public class PlayerScript : MonoBehaviour
 
         if (playerCamera == null)
             return;
-    {    
-        if (uiController != null)
-        {
-            uiController.ClearPrompt();
-        }
-
-        if (interactionText != null)
-        {
-            interactionText.gameObject.SetActive(false);
-        }
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
-        Ray ray = new Ray(
-            playerCamera.transform.position,
-            playerCamera.transform.forward
-        );
-
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance))
         {
-            // CCTV Repair
-            NPCCCTV cctv =
-                hit.collider.GetComponentInParent<NPCCCTV>();
-
-            if (cctv != null &&
-                cctv.currentState == NPCCCTV.CameraState.Disabled)
+            // CCTV repair prompt
+            NPCCCTV cctv = hit.collider.GetComponentInParent<NPCCCTV>();
+            if (cctv != null && cctv.currentState == NPCCCTV.CameraState.Disabled)
             {
                 ShowInteractionPrompt("CCTV", "[E] Repair");
-                if (uiController != null)
-                {
-                    uiController.ShowPrompt(
-                        "CCTV",
-                        "[E] Repair"
-                    );
-                }
 
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
@@ -133,10 +101,8 @@ public class PlayerScript : MonoBehaviour
                 }
             }
 
-            // Hacker Catch
-            NPCHacker hacker =
-                hit.collider.GetComponentInParent<NPCHacker>();
-
+            // Hacker catch (no prompt shown)
+            NPCHacker hacker = hit.collider.GetComponentInParent<NPCHacker>();
             if (hacker != null)
             {
                 if (Keyboard.current.eKey.wasPressedThisFrame)
@@ -183,40 +149,5 @@ public class PlayerScript : MonoBehaviour
 
         if (interactionText != null)
             interactionText.gameObject.SetActive(false);
-
-            // Robber Catch
-            RobberAI robber =
-                hit.collider.GetComponentInParent<RobberAI>();
-
-            if (robber != null)
-            {
-                if (Keyboard.current.fKey.wasPressedThisFrame)
-                {
-                    robber.Catch();
-                }
-            }
-
-            // CCTV Scan
-            NPCCCTV cctvScan =
-                hit.collider.GetComponentInParent<NPCCCTV>();
-
-            if (cctvScan != null &&
-                cctvScan.IsActive() &&
-                !cctvScan.IsScanOnCooldown())
-            {
-                if (uiController != null)
-                {
-                    uiController.ShowPrompt(
-                        "CCTV",
-                        "[F] Scan for Robbers"
-                    );
-                }
-
-                if (Keyboard.current.fKey.wasPressedThisFrame)
-                {
-                    cctvScan.ToggleScan();
-                }
-            }
-        }
     }
 }
