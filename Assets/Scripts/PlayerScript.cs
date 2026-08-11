@@ -99,5 +99,26 @@ public class PlayerScript : MonoBehaviour
                 }
             }
         }
+        RobberAI robber = hit.collider.GetComponentInParent<RobberAI>();
+        if (robber != null)
+        {
+            if (Keyboard.current.eKey.wasPressedThisFrame)
+            {
+                robber.Catch();
+            }
+        }
+        NPCCCTV cctvScan = hit.collider.GetComponentInParent<NPCCCTV>();
+        if (cctvScan != null && cctvScan.IsActive() && !cctvScan.IsScanOnCooldown())
+        {
+            if (interactionText != null)
+            {
+                interactionText.gameObject.SetActive(true);
+                interactionText.text = "Press F to Scan for Robbers";
+            }
+            if (Keyboard.current.fKey.wasPressedThisFrame)
+            {
+                cctvScan.ToggleScan();
+            }
+        }
     }
 }
