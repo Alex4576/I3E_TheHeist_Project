@@ -7,18 +7,25 @@ public class NPCVisitor : MonoBehaviour
     public float walkRadius = 10f;
     public float waitTime = 3f;
 
+    private Animator animator;
     private NavMeshAgent agent;
     private float waitTimer = 0f;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponentInChildren<Animator>();
 
         FindNewDestination();
     }
 
     void Update()
     {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", agent.velocity.magnitude);
+        }
+
         if (!agent.pathPending &&
             agent.remainingDistance <= agent.stoppingDistance)
         {

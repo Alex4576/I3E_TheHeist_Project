@@ -33,12 +33,15 @@ public class RobberAI : MonoBehaviour
 
     private float roamTimer;
     private float stealTimer;
+    private Animator animator;
 
     public RobberState currentState = RobberState.Roaming;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponentInChildren<Animator>();
+        
         if (agent == null)
         {
             Debug.LogError("RobberAI needs a NavMeshAgent!");
@@ -55,6 +58,10 @@ public class RobberAI : MonoBehaviour
 
     void Update()
     {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", agent.velocity.magnitude);
+        }
         if (agent == null || currentState == RobberState.Caught)
             return;
 

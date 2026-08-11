@@ -25,6 +25,7 @@ public class NPCHacker : MonoBehaviour
 
     private NavMeshAgent agent;
     private NPCCCTV targetCCTV;
+    private Animator animator;
 
     private float roamTimer;
     private float hackTimer;
@@ -35,6 +36,7 @@ public class NPCHacker : MonoBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponentInChildren<Animator>();
 
         if (agent == null)
         {
@@ -57,6 +59,11 @@ public class NPCHacker : MonoBehaviour
 
     void Update()
     {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", agent.velocity.magnitude);
+        }
+
         if (agent == null)
             return;
 
