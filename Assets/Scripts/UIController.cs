@@ -13,6 +13,7 @@ public class UIController : MonoBehaviour
     [SerializeField] GameObject interactCross;
     [SerializeField] GameObject nonInteractCross;
 
+    [SerializeField] bool useOwnRaycast = true;
     [SerializeField] float interactDistance = 5f;
 
     private Camera mainCamera;
@@ -20,11 +21,19 @@ public class UIController : MonoBehaviour
     void Start()
     {
         mainCamera = Camera.main;
+
+        interactionEnabled = true;
+        uiActive = false;
+
+        nonInteractCross.SetActive(true);
+        interactCross.SetActive(false);
+        actionBox.SetActive(false);
+        commandBox.SetActive(false);
     }
 
     void Update()
     {
-        if (interactionEnabled)
+        if (interactionEnabled && useOwnRaycast)
         {
             CheckInteraction();
         }
@@ -120,5 +129,32 @@ public class UIController : MonoBehaviour
         interactCross.SetActive(false);
         actionBox.SetActive(false);
         commandBox.SetActive(false);
+    }
+
+    public void ShowPrompt(string action, string command)
+    {
+        actionText = action;
+        commandText = command;
+        uiActive = true;
+
+        nonInteractCross.SetActive(false);
+
+        actionBox.SetActive(true);
+        commandBox.SetActive(true);
+        interactCross.SetActive(true);
+
+        actionBox.GetComponent<TMPro.TMP_Text>().text = actionText;
+        commandBox.GetComponent<TMPro.TMP_Text>().text = commandText;
+    }
+
+    public void ClearPrompt()
+    {
+        uiActive = false;
+
+        actionBox.SetActive(false);
+        commandBox.SetActive(false);
+        interactCross.SetActive(false);
+
+        nonInteractCross.SetActive(true);
     }
 }
