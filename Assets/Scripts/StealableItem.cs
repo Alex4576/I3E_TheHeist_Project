@@ -16,4 +16,13 @@ public class StealableItem : MonoBehaviour
         if (destroyOnSteal)
             gameObject.SetActive(false); // or Destroy(gameObject);
     }
+
+    public void Restore()
+    {
+        if (!IsStolen) return;
+
+        IsStolen = false;
+        gameObject.SetActive(true);
+        Debug.Log(name + " has been restored to its display.");
+    }
 }

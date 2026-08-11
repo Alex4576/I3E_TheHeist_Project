@@ -8,6 +8,8 @@ using TMPro;
 /// Handles player persistence across scenes, teleportation to SpawnPoints,
 /// and interaction with NPC objects (CCTV repair, Hacker catch).
 /// Shows UI prompt only for CCTV repair.
+/// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Robber catch).
+/// Prompts are shown via UIController if assigned, otherwise fall back to interactionText.
 /// </summary>
 public class PlayerScript : MonoBehaviour
 {
@@ -20,12 +22,14 @@ public class PlayerScript : MonoBehaviour
     void Awake()
     {
         // Prevent duplicate players if one already exists
-        if (FindObjectsOfType<PlayerScript>().Length > 1)
+        if (FindObjectsByType<PlayerScript>(FindObjectsSortMode.None).Length > 1)
         {
             Destroy(gameObject);
             return;
         }
 
+        // Keep this Player alive across scene loads (persists the whole hierarchy root)
+        DontDestroyOnLoad(transform.root.gameObject);
         // Keep this Player alive across scene loads
         DontDestroyOnLoad(transform.root.gameObject);
     }
@@ -44,6 +48,9 @@ public class PlayerScript : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // UIController lives in the scene (not persisted), so re-find it after every load
+        uiController = FindFirstObjectByType<UIController>();
+
         uiController = FindFirstObjectByType<UIController>();
         
         // Reset UI prompt when entering new scene
@@ -65,10 +72,14 @@ public class PlayerScript : MonoBehaviour
     }
 
     /// <summary>
-    /// Handles raycast interaction with CCTV and Hacker NPCs.
-    /// CCTV shows prompt, Hacker does not.
+    /// Handles raycast interaction with CCTV (repair + scan), Hacker, and Robber.
     /// </summary>
     void HandleInteraction()
+    {
+        ClearInteractionPrompt();
+
+        if (playerCamera == null)
+            return;
     {    
         if (uiController != null)
         {
@@ -79,6 +90,8 @@ public class PlayerScript : MonoBehaviour
         {
             interactionText.gameObject.SetActive(false);
         }
+
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
         Ray ray = new Ray(
             playerCamera.transform.position,
@@ -94,6 +107,7 @@ public class PlayerScript : MonoBehaviour
             if (cctv != null &&
                 cctv.currentState == NPCCCTV.CameraState.Disabled)
             {
+                ShowInteractionPrompt("CCTV", "[E] Repair");
                 if (uiController != null)
                 {
                     uiController.ShowPrompt(
@@ -105,6 +119,16 @@ public class PlayerScript : MonoBehaviour
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
                     cctv.RepairCamera();
+                }
+            }
+            // CCTV scan prompt (only relevant if not disabled — repair takes priority above)
+            else if (cctv != null && cctv.IsActive() && !cctv.IsScanOnCooldown())
+            {
+                ShowInteractionPrompt("CCTV", "[F] Scan for Robbers");
+
+                if (Keyboard.current.fKey.wasPressedThisFrame)
+                {
+                    cctv.ToggleScan();
                 }
             }
 
@@ -119,6 +143,45 @@ public class PlayerScript : MonoBehaviour
                     hacker.Catch();
                 }
             }
+
+            // Robber catch (no prompt shown)
+            RobberAI robber = hit.collider.GetComponentInParent<RobberAI>();
+            if (robber != null)
+            {
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    robber.Catch();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Shows a prompt via UIController if available, otherwise falls back to interactionText.
+    /// </summary>
+    void ShowInteractionPrompt(string header, string action)
+    {
+        if (uiController != null)
+        {
+            uiController.ShowPrompt(header, action);
+        }
+        else if (interactionText != null)
+        {
+            interactionText.gameObject.SetActive(true);
+            interactionText.text = action;
+        }
+    }
+
+    /// <summary>
+    /// Clears whichever prompt system is active.
+    /// </summary>
+    void ClearInteractionPrompt()
+    {
+        if (uiController != null)
+            uiController.ClearPrompt();
+
+        if (interactionText != null)
+            interactionText.gameObject.SetActive(false);
 
             // Robber Catch
             RobberAI robber =
