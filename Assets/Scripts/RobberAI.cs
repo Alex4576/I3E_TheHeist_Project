@@ -69,7 +69,7 @@ public class RobberAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
-        
+
         if (agent == null)
         {
             Debug.LogError("RobberAI needs a NavMeshAgent!");
@@ -82,6 +82,9 @@ public class RobberAI : MonoBehaviour
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
             playerTransform = playerObj.transform;
+
+        // TEMPORARY — remove once diagnosed
+        Debug.Log(name + " playerTransform found: " + (playerTransform != null ? playerTransform.name : "NULL — Player tag not found!"));
 
         currentMode = RobberMode.Scouting;
         scoutTimer = Random.Range(scoutDurationMin, scoutDurationMax);
@@ -186,7 +189,15 @@ public class RobberAI : MonoBehaviour
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, targetItem.transform.position);
+        // Compare horizontal distance only — items sitting on raised pedestals/cases
+        // would otherwise never register as "close enough" due to the height difference,
+        // even when the robber is standing right next to the display.
+        Vector3 flatRobberPos = new Vector3(transform.position.x, 0f, transform.position.z);
+        Vector3 flatItemPos = new Vector3(targetItem.transform.position.x, 0f, targetItem.transform.position.z);
+        float distance = Vector3.Distance(flatRobberPos, flatItemPos);
+
+        // TEMPORARY — remove once diagnosed
+        Debug.Log($"{name} distance to {targetItem.name}: {distance:F2} (need <= {stealRange}) | agent.hasPath: {agent.hasPath} | pathPending: {agent.pathPending} | remainingDistance: {agent.remainingDistance:F2}");
 
         if (distance <= stealRange)
         {
@@ -282,7 +293,11 @@ public class RobberAI : MonoBehaviour
         }
 
         avoidRepathTimer -= Time.deltaTime;
-        if (avoidRepathTimer > 0f && agent.hasPath)
+        // Recompute on the normal timer, OR immediately if the agent thinks it has
+        // nowhere left to go (this is what caused the "frozen" bug — a cancelled-out
+        // avoidance destination made the agent think it had already arrived)
+        bool stuck = !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance;
+        if (avoidRepathTimer > 0f && agent.hasPath && !stuck)
             return; // don't recompute the path every single frame
 
         avoidRepathTimer = avoidRepathInterval;
@@ -295,14 +310,34 @@ public class RobberAI : MonoBehaviour
 
             if (distToPlayer <= playerAvoidRadius)
             {
-                // Steer away from the player, but blend toward the exit
-                // so it doesn't just run in circles avoiding them forever
-                Vector3 awayFromPlayer = (transform.position - playerTransform.position).normalized;
-                Vector3 biasedPoint = transform.position + awayFromPlayer * playerAvoidRadius;
-                Vector3 blended = Vector3.Lerp(biasedPoint, exitPoint.position, 0.5f);
+                Vector3 toExit = (exitPoint.position - transform.position).normalized;
+                Vector3 toPlayer = (playerTransform.position - transform.position).normalized;
+                Vector3 awayFromPlayer = -toPlayer;
+                Vector3 sideStep = Vector3.Cross(toExit, Vector3.up).normalized;
 
-                if (NavMesh.SamplePosition(blended, out NavMeshHit hit, playerAvoidRadius, NavMesh.AllAreas))
-                    destination = hit.position;
+                // Try, in order: sidestep toward the roomier side, sidestep the other way,
+                // then a straight backward retreat as a last resort if the aisle is too tight
+                // for either sidestep to land on valid NavMesh.
+                Vector3 sideA = transform.position + sideStep * playerAvoidRadius + toExit * (playerAvoidRadius * 0.5f);
+                Vector3 sideB = transform.position - sideStep * playerAvoidRadius + toExit * (playerAvoidRadius * 0.5f);
+                Vector3 retreat = transform.position + awayFromPlayer * playerAvoidRadius;
+
+                // Put whichever sidestep moves further from the player first
+                Vector3[] candidates = (Vector3.Dot(sideStep, toPlayer) > 0f)
+                    ? new[] { sideB, sideA, retreat }
+                    : new[] { sideA, sideB, retreat };
+
+                float minMoveDistance = stoppingDistance * 1.5f; // must be a real move, not a near-stationary point
+
+                foreach (Vector3 candidate in candidates)
+                {
+                    if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, playerAvoidRadius, NavMesh.AllAreas) &&
+                        Vector3.Distance(transform.position, hit.position) >= minMoveDistance)
+                    {
+                        destination = hit.position;
+                        break;
+                    }
+                }
             }
         }
 

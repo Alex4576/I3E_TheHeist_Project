@@ -9,8 +9,18 @@ public class NPCHacker : MonoBehaviour
         GoingToCCTV,
         Hacking,
         Pausing,
+        Evading,
         Caught
     }
+
+    public enum HackerMode
+    {
+        Scouting,
+        Hunting
+    }
+
+    public HackerState currentState = HackerState.Roaming;
+    public HackerMode currentMode = HackerMode.Scouting;
 
     [Header("Movement")]
     [SerializeField] private float walkRadius = 10f;
@@ -23,15 +33,29 @@ public class NPCHacker : MonoBehaviour
     [SerializeField] private float hackDuration = 3f;
     [SerializeField] private float pauseAfterHack = 2f;
 
+    [Header("Scouting")]
+    [SerializeField] private float scoutDurationMin = 8f;
+    [SerializeField] private float scoutDurationMax = 15f;
+
+    [Header("Hunting")]
+    [SerializeField] private float huntDurationMin = 5f;
+    [SerializeField] private float huntDurationMax = 10f;
+
+    [Header("Player Evasion")]
+    [SerializeField] private float playerAvoidRadius = 6f;
+    [SerializeField] private float evadeDuration = 4f;
+
     private NavMeshAgent agent;
-    private NPCCCTV targetCCTV;
     private Animator animator;
+    private NPCCCTV targetCCTV;
+    private Transform playerTransform;
 
     private float roamTimer;
     private float hackTimer;
     private float pauseTimer;
-
-    public HackerState currentState = HackerState.Roaming;
+    private float scoutTimer;
+    private float huntTimer;
+    private float evadeTimer;
 
     void Start()
     {
@@ -45,27 +69,28 @@ public class NPCHacker : MonoBehaviour
         }
 
         agent.stoppingDistance = stoppingDistance;
-
         roamTimer = roamDelay;
 
-        // Look for a CCTV when the hacker starts
-        FindNearestActiveCCTV();
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+            playerTransform = playerObj.transform;
 
-        if (targetCCTV != null)
-        {
-            currentState = HackerState.GoingToCCTV;
-        }
+        // Start out roaming naturally instead of beelining for a camera immediately
+        currentMode = HackerMode.Scouting;
+        scoutTimer = Random.Range(scoutDurationMin, scoutDurationMax);
+
+        currentState = HackerState.Roaming;
     }
 
     void Update()
     {
+        if (agent == null)
+            return;
+
         if (animator != null)
         {
             animator.SetFloat("Speed", agent.velocity.magnitude);
         }
-
-        if (agent == null)
-            return;
 
         if (currentState == HackerState.Caught)
             return;
@@ -87,22 +112,49 @@ public class NPCHacker : MonoBehaviour
             case HackerState.Pausing:
                 PauseAfterHack();
                 break;
+
+            case HackerState.Evading:
+                Evade();
+                break;
         }
     }
 
     // =====================================================
-    // ROAMING
+    // ROAMING (Scouting / Hunting mode switch lives here)
     // =====================================================
 
     void Roam()
     {
-        // Check if there is an active CCTV available
-        FindNearestActiveCCTV();
-
-        if (targetCCTV != null)
+        if (currentMode == HackerMode.Scouting)
         {
-            currentState = HackerState.GoingToCCTV;
-            return;
+            scoutTimer -= Time.deltaTime;
+
+            if (scoutTimer <= 0f)
+            {
+                currentMode = HackerMode.Hunting;
+                huntTimer = Random.Range(huntDurationMin, huntDurationMax);
+                Debug.Log(name + " is now looking for a camera to hack.");
+            }
+        }
+        else if (currentMode == HackerMode.Hunting)
+        {
+            FindNearestActiveCCTV();
+
+            if (targetCCTV != null)
+            {
+                currentState = HackerState.GoingToCCTV;
+                return;
+            }
+
+            // No camera found yet — count down the hunting window
+            huntTimer -= Time.deltaTime;
+
+            if (huntTimer <= 0f)
+            {
+                currentMode = HackerMode.Scouting;
+                scoutTimer = Random.Range(scoutDurationMin, scoutDurationMax);
+                Debug.Log(name + " gave up hunting, back to scouting.");
+            }
         }
 
         roamTimer -= Time.deltaTime;
@@ -112,7 +164,6 @@ public class NPCHacker : MonoBehaviour
              agent.remainingDistance <= agent.stoppingDistance))
         {
             SetRandomDestination();
-
             roamTimer = roamDelay;
         }
     }
@@ -123,6 +174,13 @@ public class NPCHacker : MonoBehaviour
 
     void GoToCCTV()
     {
+        // Player got too close while approaching — bail out and evade
+        if (IsPlayerNear())
+        {
+            StartEvading();
+            return;
+        }
+
         // CCTV no longer exists
         if (targetCCTV == null)
         {
@@ -155,10 +213,12 @@ public class NPCHacker : MonoBehaviour
             return;
         }
 
-        float distance = Vector3.Distance(
-            transform.position,
-            targetCCTV.transform.position
-        );
+        // Compare horizontal distance only — cameras mounted up on walls/ceilings
+        // would otherwise never register as "close enough" due to the height
+        // difference, even when the hacker is standing right underneath them.
+        Vector3 flatHackerPos = new Vector3(transform.position.x, 0f, transform.position.z);
+        Vector3 flatCamPos = new Vector3(targetCCTV.transform.position.x, 0f, targetCCTV.transform.position.z);
+        float distance = Vector3.Distance(flatHackerPos, flatCamPos);
 
         // Close enough to start hacking
         if (distance <= hackRange)
@@ -168,7 +228,7 @@ public class NPCHacker : MonoBehaviour
             hackTimer = hackDuration;
             currentState = HackerState.Hacking;
 
-            Debug.Log("Hacker is hacking " + targetCCTV.name);
+            Debug.Log(name + " is hacking " + targetCCTV.name);
 
             return;
         }
@@ -186,6 +246,15 @@ public class NPCHacker : MonoBehaviour
 
     void HackCCTV()
     {
+        // Player got too close mid-hack — abort and evade
+        if (IsPlayerNear())
+        {
+            Debug.Log(name + " spotted the player — aborting hack!");
+            targetCCTV = null;
+            StartEvading();
+            return;
+        }
+
         if (targetCCTV == null)
         {
             FindNearestActiveCCTV();
@@ -220,7 +289,7 @@ public class NPCHacker : MonoBehaviour
             // Disable this CCTV
             targetCCTV.DisableCamera();
 
-            Debug.Log("Hacker hacked " + targetCCTV.name);
+            Debug.Log(name + " hacked " + targetCCTV.name);
 
             // Forget this CCTV
             targetCCTV = null;
@@ -241,20 +310,61 @@ public class NPCHacker : MonoBehaviour
 
         if (pauseTimer <= 0f)
         {
-            // Look for another active CCTV
-            FindNearestActiveCCTV();
+            // Go back to roaming naturally rather than immediately re-hunting
+            currentState = HackerState.Roaming;
+            currentMode = HackerMode.Scouting;
+            scoutTimer = Random.Range(scoutDurationMin, scoutDurationMax);
+        }
+    }
 
-            if (targetCCTV != null)
+    // =====================================================
+    // EVADE
+    // =====================================================
+
+    void StartEvading()
+    {
+        agent.ResetPath();
+        evadeTimer = evadeDuration;
+        currentState = HackerState.Evading;
+        Debug.Log(name + " is evading the player.");
+    }
+
+    void Evade()
+    {
+        // Keep moving away from the player while evading
+        if (playerTransform != null && agent.isOnNavMesh &&
+            !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            Vector3 awayFromPlayer = (transform.position - playerTransform.position).normalized;
+            Vector3 retreatPoint = transform.position + awayFromPlayer * walkRadius;
+
+            if (NavMesh.SamplePosition(retreatPoint, out NavMeshHit hit, walkRadius, NavMesh.AllAreas))
+                agent.SetDestination(hit.position);
+        }
+
+        evadeTimer -= Time.deltaTime;
+
+        if (evadeTimer <= 0f)
+        {
+            if (IsPlayerNear())
             {
-                currentState = HackerState.GoingToCCTV;
+                // Still too close — keep evading a while longer
+                evadeTimer = evadeDuration;
             }
             else
             {
-                // All CCTVs are disabled
                 currentState = HackerState.Roaming;
-                roamTimer = 0f;
+                currentMode = HackerMode.Scouting;
+                scoutTimer = Random.Range(scoutDurationMin, scoutDurationMax);
+                Debug.Log(name + " resumed roaming.");
             }
         }
+    }
+
+    bool IsPlayerNear()
+    {
+        if (playerTransform == null) return false;
+        return Vector3.Distance(transform.position, playerTransform.position) <= playerAvoidRadius;
     }
 
     // =====================================================
@@ -269,6 +379,9 @@ public class NPCHacker : MonoBehaviour
         float closestDistance = detectionRange;
         NPCCCTV closestCamera = null;
 
+        // Compare horizontal distance only — see note in GoToCCTV() above.
+        Vector3 flatHackerPos = new Vector3(transform.position.x, 0f, transform.position.z);
+
         foreach (NPCCCTV camera in cameras)
         {
             if (camera == null)
@@ -279,10 +392,8 @@ public class NPCHacker : MonoBehaviour
             if (!camera.IsActive())
                 continue;
 
-            float distance = Vector3.Distance(
-                transform.position,
-                camera.transform.position
-            );
+            Vector3 flatCamPos = new Vector3(camera.transform.position.x, 0f, camera.transform.position.z);
+            float distance = Vector3.Distance(flatHackerPos, flatCamPos);
 
             if (distance < closestDistance)
             {
@@ -334,7 +445,7 @@ public class NPCHacker : MonoBehaviour
         if (agent != null)
             agent.ResetPath();
 
-        Debug.Log("Hacker caught!");
+        Debug.Log(name + " caught!");
 
         Destroy(gameObject);
     }
