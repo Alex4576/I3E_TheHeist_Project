@@ -1214,18 +1214,27 @@ MonoBehaviour:
   currentState: 1
   currentMode: 0
   walkRadius: 50.97
-  roamDelay: 3
+  roamDelayMin: 2
+  roamDelayMax: 5
   stoppingDistance: 1.5
+  scoutSpeed: 2
+  huntSpeed: 3.5
+  evadeSpeed: 5.5
   detectionRange: 8.03
-  hackRange: 5.03
+  hackRange: 3.45
   hackDuration: 3
-  pauseAfterHack: 8
+  pauseMinAfterHack: 1.5
+  pauseMaxAfterHack: 3.5
+  cctvSearchInterval: 1
   scoutDurationMin: 8
   scoutDurationMax: 15
   huntDurationMin: 5
   huntDurationMax: 10
   playerAvoidRadius: 3
   evadeDuration: 4
+  evadeLateralAngle: 35
+  lookAroundChance: 0.25
+  lookAroundDuration: 1.8
 --- !u!136 &295600943
 CapsuleCollider:
   m_ObjectHideFlags: 0
