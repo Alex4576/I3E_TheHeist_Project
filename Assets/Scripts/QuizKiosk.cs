@@ -94,6 +94,14 @@ public class QuizKiosk : MonoBehaviour
     public LiftDoor liftDoor;
 
 
+    [Header("Gameplay UI")]
+    /// <summary>
+    /// Reference to the persistent GameplayUI HUD that updates objectives and dialogue.
+    /// </summary>
+    public GameplayUI gameplayUI;
+
+
+
     // Stores the index of the question currently being displayed.
     private int currentQuestion = 0;
 
@@ -129,6 +137,12 @@ public class QuizKiosk : MonoBehaviour
         }
 
         SetupQuestions();
+
+        if (gameplayUI == null)
+        {
+            gameplayUI = FindObjectOfType<GameplayUI>();
+        }
+
     }
 
 
@@ -161,10 +175,8 @@ public class QuizKiosk : MonoBehaviour
         mainCamera.enabled = false;
         quizCamera.enabled = true;
 
-        if (quizUI != null)
-        {
-            quizUI.SetActive(true);
-        }
+        if (quizUI != null) quizUI.SetActive(true);
+        if (gameplayUI != null) gameplayUI.HideUI(); // Hide UI during quiz
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -331,6 +343,11 @@ public class QuizKiosk : MonoBehaviour
             liftDoor.UnlockLift();
         }
 
+        if (gameplayUI != null)
+        {
+            gameplayUI.CompleteQuiz();
+        }
+
         Debug.Log("QUIZ COMPLETE - LIFT UNLOCKED");
     }
 
@@ -414,6 +431,7 @@ public class QuizKiosk : MonoBehaviour
         quizUI.SetActive(false);
 
         uiController.ShowInteractionUI();
+        if (gameplayUI != null) gameplayUI.ShowUI(); // restore GameplayUI
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -432,6 +450,7 @@ public class QuizKiosk : MonoBehaviour
         quizUI.SetActive(false);
 
         uiController.ShowInteractionUI();
+        if (gameplayUI != null) gameplayUI.ShowUI(); // Show UI again
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

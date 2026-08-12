@@ -3,27 +3,36 @@ using TMPro;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Handles the persistent gameplay HUD including timer, objectives, dialogue text,
-/// pause menu, and lose condition. This script persists across scenes.
+/// Manages the persistent gameplay UI including objectives, dialogue,
+/// timer countdown, pause menu, lose condition, and UI visibility.
+/// This script persists across scenes.
 /// </summary>
 public class GameplayUI : MonoBehaviour
 {
     private static GameplayUI instance;
 
     [Header("UI Elements")]
-    [SerializeField] private TextMeshProUGUI objectivesText;  /// <summary>Displays objectives and timer.</summary>
-    [SerializeField] private TextMeshProUGUI dialogueText;    /// <summary>Displays dialogue instructions.</summary>
-    [SerializeField] private GameObject losePanel;            /// <summary>Panel shown when time runs out.</summary>
-    [SerializeField] private GameObject pausePanel;           /// <summary>Panel shown when game is paused.</summary>
+    [SerializeField] private TextMeshProUGUI objectivesText; 
+    /// <summary>Text element displaying objectives and timer.</summary>
+
+    [SerializeField] private TextMeshProUGUI dialogueText;   
+    /// <summary>Text element displaying dialogue instructions.</summary>
+
+    [SerializeField] private GameObject losePanel;           
+    /// <summary>Panel shown when the player loses (time runs out).</summary>
+
+    [SerializeField] private GameObject pausePanel;          
+    /// <summary>Panel shown when the game is paused.</summary>
 
     [Header("Timer Settings")]
-    [SerializeField] private float startTime = 480f;          /// <summary>Starting time in seconds (8 minutes).</summary>
-    private float currentTime;
+    [SerializeField] private float startTime = 480f;         
+    /// <summary>Starting time in seconds (default 8 minutes).</summary>
 
-    private bool quizCompleted = false;
-    private int thiefCaught = 0;
-    private int hackerCaught = 0;
-    private bool isPaused = false;
+    private float currentTime;                               /// <summary>Current countdown time.</summary>
+    private bool quizCompleted = false;                      /// <summary>Tracks whether the quiz is completed.</summary>
+    private int thiefCaught = 0;                             /// <summary>Number of thieves caught.</summary>
+    private int hackerCaught = 0;                            /// <summary>Number of hackers caught.</summary>
+    private bool isPaused = false;                           /// <summary>Tracks whether the game is paused.</summary>
 
     /// <summary>
     /// Ensures only one instance of GameplayUI persists across scenes.
@@ -44,18 +53,12 @@ public class GameplayUI : MonoBehaviour
     /// <summary>
     /// Subscribes to scene load events.
     /// </summary>
-    void OnEnable()
-    {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
+    void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
 
     /// <summary>
     /// Unsubscribes from scene load events.
     /// </summary>
-    void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
+    void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
 
     /// <summary>
     /// Initializes timer and UI state.
@@ -67,7 +70,7 @@ public class GameplayUI : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
 
         UpdateObjectives();
-        dialogueText.text = "Player, please head to exhibit to complete quiz.";
+        dialogueText.text = "Refresh your knowledge of crime prevention,\n\nHead towards the exhibition area and interact with a Kiosk to complete a Quiz";
     }
 
     /// <summary>
@@ -96,7 +99,7 @@ public class GameplayUI : MonoBehaviour
     {
         quizCompleted = true;
         UpdateObjectives();
-        dialogueText.text = "Please head towards the gallery using the lift in this room.";
+        dialogueText.text = "Please head towards the Gallery using the Lift in this room.";
     }
 
     /// <summary>
@@ -149,13 +152,13 @@ public class GameplayUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Updates dialogue when entering specific scenes (e.g., Gallery).
+    /// Updates dialogue when entering specific scenes.
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "GalleryScene") // replace with your actual scene name
+        if (scene.name == "galleryscene")
         {
-            dialogueText.text = "The culprits of the heist are in this room. Find them and catch them!";
+            dialogueText.text = "The Culprits of the Heist are in this Gallery. Find them and catch them using the Key E!";
         }
     }
 
@@ -187,9 +190,21 @@ public class GameplayUI : MonoBehaviour
     public void ExitGame()
     {
     #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false; // stops Play Mode in Editor
+        UnityEditor.EditorApplication.isPlaying = false;
     #else
-        Application.Quit(); // closes the built game
+        Application.Quit();
     #endif
     }
+
+    // ---------------- UI Visibility Methods ----------------
+
+    /// <summary>
+    /// Shows the UI (objectives and dialogue).
+    /// </summary>
+    public void ShowUI() => gameObject.SetActive(true);
+
+    /// <summary>
+    /// Hides the UI (objectives and dialogue).
+    /// </summary>
+    public void HideUI() => gameObject.SetActive(false);
 }
