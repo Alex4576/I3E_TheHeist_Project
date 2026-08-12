@@ -81,6 +81,12 @@ public class LiftDoor : MonoBehaviour
                 openSpeed * Time.deltaTime
             );
         }
+
+        if (leftDoor.localPosition == leftClosedPosition &&
+        rightDoor.localPosition == rightClosedPosition)
+        {
+            isClosing = false;
+        }
     }
 
     IEnumerator OpenIntroLift()
