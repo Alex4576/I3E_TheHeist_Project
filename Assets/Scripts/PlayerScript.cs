@@ -6,7 +6,7 @@ using TMPro;
 /// <summary>
 /// PlayerScript.cs
 /// Handles player persistence across scenes, teleportation to SpawnPoints,
-/// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Robber catch).
+/// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Robber catch, Visitor catch).
 /// Prompts are shown via UIController if assigned, otherwise fall back to interactionText.
 /// </summary>
 public class PlayerScript : MonoBehaviour
@@ -32,13 +32,11 @@ public class PlayerScript : MonoBehaviour
 
     void OnEnable()
     {
-        // Subscribe to scene load event
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     void OnDisable()
     {
-        // Unsubscribe to avoid errors
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -66,7 +64,7 @@ public class PlayerScript : MonoBehaviour
     }
 
     /// <summary>
-    /// Handles raycast interaction with CCTV (repair + scan), Hacker, and Robber.
+    /// Handles raycast interaction with CCTV (repair + scan), Hacker, Robber, and Visitor.
     /// </summary>
     void HandleInteraction()
     {
@@ -90,7 +88,7 @@ public class PlayerScript : MonoBehaviour
                     cctv.RepairCamera();
                 }
             }
-            // CCTV scan prompt (only relevant if not disabled — repair takes priority above)
+            // CCTV scan prompt
             else if (cctv != null && cctv.IsActive() && !cctv.IsScanOnCooldown())
             {
                 ShowInteractionPrompt("CCTV", "[F] Scan for Robbers");
@@ -120,12 +118,19 @@ public class PlayerScript : MonoBehaviour
                     robber.Catch();
                 }
             }
+
+            // Visitor catch (no prompt shown)
+            NPCVisitor visitor = hit.collider.GetComponentInParent<NPCVisitor>();
+            if (visitor != null)
+            {
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    visitor.CatchVisitor();
+                }
+            }
         }
     }
 
-    /// <summary>
-    /// Shows a prompt via UIController if available, otherwise falls back to interactionText.
-    /// </summary>
     void ShowInteractionPrompt(string header, string action)
     {
         if (uiController != null)
@@ -139,9 +144,6 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Clears whichever prompt system is active.
-    /// </summary>
     void ClearInteractionPrompt()
     {
         if (uiController != null)

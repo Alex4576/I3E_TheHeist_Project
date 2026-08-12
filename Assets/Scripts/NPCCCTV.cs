@@ -2,12 +2,7 @@ using UnityEngine;
 
 public class NPCCCTV : MonoBehaviour
 {
-    public enum CameraState
-    {
-        Active,
-        Disabled
-    }
-
+    public enum CameraState { Active, Disabled }
     public CameraState currentState = CameraState.Active;
 
     [Header("VFX")]
@@ -17,65 +12,6 @@ public class NPCCCTV : MonoBehaviour
     private GameObject activeSpark;
     private GameObject activeSmoke;
 
-    public void DisableCamera()
-    {
-        if (currentState == CameraState.Disabled)
-            return;
-
-        currentState = CameraState.Disabled;
-
-        Debug.Log(name + " has been hacked!");
-
-        if (sparkVFXPrefab != null)
-        {
-            activeSpark = Instantiate(
-                sparkVFXPrefab,
-                transform.position,
-                Quaternion.identity,
-                transform
-            );
-        }
-
-        if (smokeVFXPrefab != null)
-        {
-            activeSmoke = Instantiate(
-                smokeVFXPrefab,
-                transform.position,
-                Quaternion.identity,
-                transform
-            );
-        }
-        isScanning = false;
-    }
-
-    public void RepairCamera()
-    {
-        if (currentState == CameraState.Active)
-            return;
-
-        currentState = CameraState.Active;
-
-        Debug.Log(name + " has been repaired!");
-
-        if (activeSpark != null)
-            Destroy(activeSpark);
-
-        if (activeSmoke != null)
-            Destroy(activeSmoke);
-
-        activeSpark = null;
-        activeSmoke = null;
-    }
-
-    public bool IsActive()
-    {
-        return currentState == CameraState.Active;
-    }
-
-    public bool IsDisabled()
-    {
-        return currentState == CameraState.Disabled;
-    }
     [Header("Scan Ability")]
     [SerializeField] private float scanDuration = 4f;
     [SerializeField] private float scanCooldown = 8f;
@@ -84,9 +20,6 @@ public class NPCCCTV : MonoBehaviour
     private bool isScanning;
     private float scanTimer;
     private float cooldownTimer;
-
-    public bool IsScanning() => isScanning;
-    public bool IsScanOnCooldown() => cooldownTimer > 0f;
 
     void Update()
     {
@@ -97,15 +30,13 @@ public class NPCCCTV : MonoBehaviour
         {
             scanTimer -= Time.deltaTime;
 
-            // Check for robbers in range every frame while active
+            // Check for robbers in range
             RobberAI[] robbers = FindObjectsByType<RobberAI>(FindObjectsSortMode.None);
             foreach (RobberAI robber in robbers)
             {
                 if (robber == null) continue;
-
-                float dist = Vector3.Distance(transform.position, robber.transform.position);
-                if (dist <= scanRadius)
-                    robber.OnDetectedByScan();
+                if (Vector3.Distance(transform.position, robber.transform.position) <= scanRadius)
+                    robber.OnDetectedByScan(); // now compiles cleanly
             }
 
             if (scanTimer <= 0f)
@@ -116,16 +47,57 @@ public class NPCCCTV : MonoBehaviour
         }
     }
 
+    // ---------------- Disable ----------------
+    public void DisableCamera()
+    {
+        if (currentState == CameraState.Disabled) return;
+        currentState = CameraState.Disabled;
+
+        if (sparkVFXPrefab != null)
+            activeSpark = Instantiate(sparkVFXPrefab, transform.position, Quaternion.identity, transform);
+        if (smokeVFXPrefab != null)
+            activeSmoke = Instantiate(smokeVFXPrefab, transform.position, Quaternion.identity, transform);
+
+        isScanning = false;
+
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (ui != null) ui.SetDialogue("A CCTV has been hacked!");
+    }
+
+    // ---------------- Repair ----------------
+    public void RepairCamera()
+    {
+        if (currentState == CameraState.Active) return;
+        currentState = CameraState.Active;
+
+        if (activeSpark != null) Destroy(activeSpark);
+        if (activeSmoke != null) Destroy(activeSmoke);
+        activeSpark = null;
+        activeSmoke = null;
+
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (ui != null) ui.SetDialogue("A CCTV has been repaired!");
+    }
+
+    // ---------------- Scan ----------------
     public bool ToggleScan()
     {
-        // Can't scan while the camera itself is hacked, or while on cooldown
         if (currentState == CameraState.Disabled) return false;
         if (isScanning) return false;
         if (cooldownTimer > 0f) return false;
 
         isScanning = true;
         scanTimer = scanDuration;
-        Debug.Log(name + " scan activated!");
+
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (ui != null) ui.SetDialogue("CCTV scan activated!");
+
         return true;
     }
+
+    // ---------------- Helpers ----------------
+    public bool IsActive() => currentState == CameraState.Active;
+    public bool IsDisabled() => currentState == CameraState.Disabled;
+    public bool IsScanning() => isScanning;
+    public bool IsScanOnCooldown() => cooldownTimer > 0f;
 }

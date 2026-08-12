@@ -21,6 +21,9 @@ public class GameplayUI : MonoBehaviour
     [SerializeField] private GameObject losePanel;           
     /// <summary>Panel shown when the player loses (time runs out).</summary>
 
+    [SerializeField] private GameObject winPanel;           
+    /// <summary>Panel shown when the player wins (completes all objectives).</summary>
+
     [SerializeField] private GameObject pausePanel;          
     /// <summary>Panel shown when the game is paused.</summary>
 
@@ -122,6 +125,18 @@ public class GameplayUI : MonoBehaviour
         UpdateObjectives();
     }
 
+    // ---------------- Reduce timer if caught visitors ----------------
+    public void AdjustTimer(float amount)
+    {
+        currentTime += amount;
+
+        // Clamp so it never goes below zero
+        if (currentTime < 0f)
+            currentTime = 0f;
+
+        UpdateObjectives();
+    }
+
     /// <summary>
     /// Updates objectives text including timer, quiz, thief, and hacker progress.
     /// </summary>
@@ -140,6 +155,30 @@ public class GameplayUI : MonoBehaviour
             "2. Catch the People Involved:\n" +
             "   Thief: " + thiefCaught + "/5\n" +
             "   Hacker: " + hackerCaught + "/3";
+
+            // Check winning condition
+           if (quizCompleted && thiefCaught >= 5 && hackerCaught >= 3)
+            {
+                WinGame();
+            }  
+    }
+
+    /// <summary>
+    /// Updates the dialogue text shown to the player.
+    /// </summary>
+    public void SetDialogue(string message)
+    {
+        if (dialogueText != null)
+            dialogueText.text = message;
+    }
+
+    ///<summary>
+    /// Shows the win panel and freezes the game.
+    /// </summary>
+    void WinGame()
+    {
+        if (winPanel != null) winPanel.SetActive(true);
+        Time.timeScale = 0f;
     }
 
     /// <summary>
@@ -156,7 +195,7 @@ public class GameplayUI : MonoBehaviour
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "galleryscene")
+        if (scene.name == "GalleryScene")
         {
             dialogueText.text = "The Culprits of the Heist are in this Gallery. Find them and catch them using the Key E!";
         }

@@ -209,27 +209,28 @@ public class NPCHacker : MonoBehaviour
     // HACK CCTV
     // =====================================================
 
-    void HackCCTV()
+void HackCCTV()
+{
+    if (targetCCTV == null || !targetCCTV.IsActive())
     {
-        if (IsPlayerNear()) { targetCCTV = null; StartEvading(); return; }
-        if (!ValidateTarget()) return;
-
-        // Smoothly face the camera while hacking
-        Vector3 toCamera = targetCCTV.transform.position - transform.position;
-        toCamera.y = 0f;
-        if (toCamera != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation, Quaternion.LookRotation(toCamera), Time.deltaTime * 5f);
-
-        hackTimer -= Time.deltaTime;
-        if (hackTimer <= 0f)
-        {
-            targetCCTV.DisableCamera();
-            targetCCTV   = null;
-            pauseTimer   = Random.Range(pauseMinAfterHack, pauseMaxAfterHack);
-            currentState = HackerState.Pausing;
-        }
+        currentState = HackerState.Roaming;
+        return;
     }
+
+    hackTimer -= Time.deltaTime;
+    if (hackTimer <= 0f)
+    {
+        targetCCTV.DisableCamera();
+
+        // Update GameplayUI dialogue
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (ui != null) ui.SetDialogue("A hacker has disabled a CCTV!");
+
+        pauseTimer = Random.Range(pauseMinAfterHack, pauseMaxAfterHack);
+        currentState = HackerState.Pausing;
+    }
+}
+
 
     // =====================================================
     // PAUSE
@@ -348,6 +349,15 @@ public class NPCHacker : MonoBehaviour
         if (currentState == HackerState.Caught) return;
         currentState = HackerState.Caught;
         agent?.ResetPath();
+
+        // Update GameplayUI dialogue and objectives
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (ui != null)
+        {
+            ui.SetDialogue("Hacker has been caught!");
+            ui.CatchHacker();   // increment hacker count in UI
+        }
+
         Destroy(gameObject);
     }
 }
