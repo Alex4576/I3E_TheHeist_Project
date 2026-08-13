@@ -45,7 +45,13 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    void Update() => HandleInteraction();
+    void Update()
+    {
+        if (UIController.interactionEnabled)
+        {
+            HandleInteraction();
+        }
+    }
 
     void HandleInteraction()
     {

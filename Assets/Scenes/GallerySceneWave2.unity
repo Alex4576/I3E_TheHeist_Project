@@ -798,6 +798,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCCCTV
   currentState: 0
+  uiController: {fileID: 772256621}
   cctvCamera: {fileID: 1552992140}
   cctvScanUI: {fileID: 1972506069}
   statusText: {fileID: 706126684}

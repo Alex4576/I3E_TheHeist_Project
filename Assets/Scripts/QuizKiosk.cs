@@ -100,6 +100,9 @@ public class QuizKiosk : MonoBehaviour
     /// </summary>
     public GameplayUI gameplayUI;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource successAudio;
+    [SerializeField] private AudioSource wrongAudio;
 
 
     // Stores the index of the question currently being displayed.
@@ -297,6 +300,11 @@ public class QuizKiosk : MonoBehaviour
         }
         else
         {
+            if (wrongAudio != null)
+            {
+                wrongAudio.Play();
+            }
+
             wrongPanel.SetActive(true);
         }
     }
@@ -336,6 +344,11 @@ public class QuizKiosk : MonoBehaviour
         if (completePanel != null)
         {
             completePanel.SetActive(true);
+        }
+
+        if (successAudio != null)
+        {
+            successAudio.Play();
         }
 
         if (liftDoor != null)

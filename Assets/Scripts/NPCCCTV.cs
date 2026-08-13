@@ -7,6 +7,9 @@ public class NPCCCTV : MonoBehaviour
     public enum CameraState { Active, Disabled }
     public CameraState currentState = CameraState.Active;
 
+    [Header("Interaction")]
+    [SerializeField] private UIController uiController;
+
     [Header("CCTV Camera")]
     [SerializeField] private Camera cctvCamera;
 
@@ -144,6 +147,11 @@ public class NPCCCTV : MonoBehaviour
         {
             mainCamera.enabled = true;
         }
+
+        if (uiController != null)
+        {
+            uiController.ShowInteractionUI();
+        }
     }
 
     // ---------------- Disable ----------------
@@ -234,6 +242,11 @@ public class NPCCCTV : MonoBehaviour
         isScanning = true;
         scanTimer = scanDuration;
         thiefDetected = false;
+
+        if (uiController != null)
+        {
+            uiController.HideInteractionUI();
+        }
 
         // Switch from player camera to CCTV camera
         if (mainCamera != null)
