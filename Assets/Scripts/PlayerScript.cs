@@ -70,13 +70,51 @@ public class PlayerScript : MonoBehaviour
             }
 
             NPCHacker hacker = hit.collider.GetComponentInParent<NPCHacker>();
-            if (hacker != null && Keyboard.current.eKey.wasPressedThisFrame) hacker.Catch();
+            if (hacker != null)
+            {
+                ShowInteractionPrompt("Suspect", "[E] Catch");
+
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    hacker.Catch();
+                }
+            }
 
             ThiefAI thief = hit.collider.GetComponentInParent<ThiefAI>();
-            if (thief != null && Keyboard.current.eKey.wasPressedThisFrame) thief.Catch();
+            if (thief != null)
+            {
+                ShowInteractionPrompt("Suspect", "[E] Catch");
+
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    thief.Catch();
+
+                    GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+
+                    if (ui != null)
+                    {
+                        ui.SetDialogue("SUCCESS! You caught the thief!");
+                    }
+                }
+            }
 
             NPCVisitor visitor = hit.collider.GetComponentInParent<NPCVisitor>();
-            if (visitor != null && Keyboard.current.eKey.wasPressedThisFrame) visitor.CatchVisitor();
+            if (visitor != null)
+            {
+                ShowInteractionPrompt("Suspect", "[E] Catch");
+
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    visitor.CatchVisitor();
+
+                    GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+
+                    if (ui != null)
+                    {
+                        ui.SetDialogue("WRONG PERSON! This visitor is innocent.");
+                    }
+                }
+            }
         }
     }
 
