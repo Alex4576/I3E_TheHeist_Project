@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 /// Plays a looping background track and persists across scene loads.
 /// Automatically crossfades to a different track when a scene with a
 /// matching entry in sceneTracks is loaded (e.g. switching to chase music).
+/// Also handles end game music via PlayEndGameMusic().
 /// </summary>
 public class MusicManager : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class MusicManager : MonoBehaviour
     [System.Serializable]
     public class SceneTrack
     {
-        public string sceneName;   // Must match the exact Scene name in Build Settings
+        public string sceneName;
         public AudioClip clip;
     }
 
@@ -33,7 +34,6 @@ public class MusicManager : MonoBehaviour
 
     void Awake()
     {
-        // Singleton — prevent duplicate MusicManagers across scene loads
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -51,7 +51,7 @@ public class MusicManager : MonoBehaviour
         audioSource.loop = true;
         audioSource.volume = volume;
         audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0f; // 2D sound — same volume no matter where the player is
+        audioSource.spatialBlend = 0f;
     }
 
     void OnEnable()
@@ -72,7 +72,7 @@ public class MusicManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        AudioClip targetClip = backgroundMusic; // fallback to default if no match found
+        AudioClip targetClip = backgroundMusic;
 
         foreach (SceneTrack track in sceneTracks)
         {
@@ -110,8 +110,7 @@ public class MusicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Crossfades to a new clip. Safe to call even if newClip is already playing
-    /// (it'll just do nothing) or if it's the same clip as the default.
+    /// Crossfades to a new clip. Does nothing if the clip is already playing.
     /// </summary>
     public void ChangeTrack(AudioClip newClip)
     {
@@ -124,16 +123,20 @@ public class MusicManager : MonoBehaviour
         fadeCoroutine = StartCoroutine(FadeToClip(newClip));
     }
 
+    /// <summary>
+    /// Uses unscaledDeltaTime so fades still complete even when the
+    /// game is paused (Time.timeScale = 0).
+    /// </summary>
     private IEnumerator FadeToClip(AudioClip newClip)
     {
         float halfDuration = fadeDuration / 2f;
 
-        // Fade out current track
+        // Fade out
         float startVolume = audioSource.volume;
         float t = 0f;
         while (t < halfDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             audioSource.volume = Mathf.Lerp(startVolume, 0f, t / halfDuration);
             yield return null;
         }
@@ -143,16 +146,38 @@ public class MusicManager : MonoBehaviour
         audioSource.clip = newClip;
         audioSource.Play();
 
-        // Fade in new track
+        // Fade in
         t = 0f;
         while (t < halfDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             audioSource.volume = Mathf.Lerp(0f, volume, t / halfDuration);
             yield return null;
         }
         audioSource.volume = volume;
 
         fadeCoroutine = null;
+    }
+
+    /// <summary>
+    /// Plays a one-shot end game clip immediately, stopping any
+    /// in-progress fade first. Safe to call while Time.timeScale is 0
+    /// because audio playback ignores timeScale entirely.
+    /// </summary>
+    public void PlayEndGameMusic(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        // Kill any running fade coroutine so it can't interfere
+        StopAllCoroutines();
+        fadeCoroutine = null;
+
+        // Restore volume in case a fade left it at zero,
+        // then swap to the end game clip and play immediately
+        audioSource.volume = volume;
+        audioSource.Stop();
+        audioSource.loop = false;
+        audioSource.clip = clip;
+        audioSource.Play();
     }
 }

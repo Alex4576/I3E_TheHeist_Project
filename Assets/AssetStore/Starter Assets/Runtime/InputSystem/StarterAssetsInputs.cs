@@ -28,7 +28,10 @@ namespace StarterAssets
 
 		public void OnLook(InputValue value)
 		{
-			if(cursorInputForLook)
+			// Don't rotate the camera while the game is paused or frozen
+			if (Time.timeScale == 0f) return;
+
+			if (cursorInputForLook)
 			{
 				LookInput(value.Get<Vector2>());
 			}
@@ -45,11 +48,10 @@ namespace StarterAssets
 		}
 #endif
 
-
 		public void MoveInput(Vector2 newMoveDirection)
 		{
 			move = newMoveDirection;
-		} 
+		}
 
 		public void LookInput(Vector2 newLookDirection)
 		{
@@ -65,9 +67,15 @@ namespace StarterAssets
 		{
 			sprint = newSprintState;
 		}
-		
+
 		private void OnApplicationFocus(bool hasFocus)
 		{
+			// Don't re-lock the cursor while the game is paused or on an end screen.
+			// Without this guard, clicking a UI button briefly shifts application
+			// focus which re-triggers this method and locks the cursor again,
+			// causing the pause menu buttons to become unclickable.
+			if (Time.timeScale == 0f) return;
+
 			SetCursorState(cursorLocked);
 		}
 
@@ -76,5 +84,4 @@ namespace StarterAssets
 			Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
 		}
 	}
-	
 }

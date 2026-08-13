@@ -32005,6 +32005,8 @@ MonoBehaviour:
   startTime: 480
   wave2SceneName: GallerySceneWave2
   finalWaveSceneName: GallerySceneFinalWave
+  winMusic: {fileID: 8300000, guid: 3392daaf88a5a024fa19a99486a2e004, type: 3}
+  loseMusic: {fileID: 8300000, guid: 4a4510f5e2e932c4cae3998bcdcda9d2, type: 3}
 --- !u!4 &606082728
 Transform:
   m_ObjectHideFlags: 0
@@ -50297,6 +50299,10 @@ PrefabInstance:
     - target: {fileID: 2862278905927072855, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       propertyPath: m_LocalPosition.z
       value: -23.948792
+      objectReference: {fileID: 0}
+    - target: {fileID: 4244626405643678211, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: cursorLocked
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5126527961139664760, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       propertyPath: m_LocalPosition.x
