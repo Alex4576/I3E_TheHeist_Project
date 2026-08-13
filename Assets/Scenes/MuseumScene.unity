@@ -32002,6 +32002,7 @@ MonoBehaviour:
   losePanel: {fileID: 1537791169}
   winPanel: {fileID: 1576209293}
   pausePanel: {fileID: 1309468878}
+  gameUI: {fileID: 0}
   startTime: 480
   wave2SceneName: GallerySceneWave2
   finalWaveSceneName: GallerySceneFinalWave
