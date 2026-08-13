@@ -3,13 +3,13 @@ using UnityEngine.AI;
 using System.Collections.Generic;
 using System.Linq;
 
-public class RobberAI : MonoBehaviour
+public class ThiefAI : MonoBehaviour
 {
-    public enum RobberState { Roaming, GoingToItem, Stealing, Caught }
-    public enum RobberMode { Scouting, Stealing }
+    public enum ThiefState { Roaming, GoingToItem, Stealing, Caught }
+    public enum ThiefMode { Scouting, Stealing }
 
-    public RobberMode currentMode = RobberMode.Scouting;
-    public RobberState currentState = RobberState.Roaming;
+    public ThiefMode currentMode = ThiefMode.Scouting;
+    public ThiefState currentState = ThiefState.Roaming;
 
     [Header("Movement")]
     [SerializeField] private float walkRadius = 10f;
@@ -42,28 +42,28 @@ public class RobberAI : MonoBehaviour
 
         if (agent == null)
         {
-            Debug.LogError("RobberAI needs a NavMeshAgent!");
+            Debug.LogError("ThiefAI needs a NavMeshAgent!");
             return;
         }
 
         agent.stoppingDistance = stoppingDistance;
         roamTimer = roamDelay;
-        currentMode = RobberMode.Scouting;
-        currentState = RobberState.Roaming;
+        currentMode = ThiefMode.Scouting;
+        currentState = ThiefState.Roaming;
     }
 
     void Update()
     {
-        if (agent == null || currentState == RobberState.Caught) return;
+        if (agent == null || currentState == ThiefState.Caught) return;
 
         if (animator != null)
             animator.SetFloat("Speed", agent.velocity.magnitude);
 
         switch (currentState)
         {
-            case RobberState.Roaming: Roam(); break;
-            case RobberState.GoingToItem: GoToItem(); break;
-            case RobberState.Stealing: DoSteal(); break;
+            case ThiefState.Roaming: Roam(); break;
+            case ThiefState.GoingToItem: GoToItem(); break;
+            case ThiefState.Stealing: DoSteal(); break;
         }
     }
 
@@ -73,7 +73,7 @@ public class RobberAI : MonoBehaviour
         FindNearestItem();
         if (targetItem != null)
         {
-            currentState = RobberState.GoingToItem;
+            currentState = ThiefState.GoingToItem;
             return;
         }
 
@@ -91,7 +91,7 @@ public class RobberAI : MonoBehaviour
         if (targetItem == null || targetItem.IsStolen)
         {
             targetItem = null;
-            currentState = RobberState.Roaming;
+            currentState = ThiefState.Roaming;
             return;
         }
 
@@ -101,7 +101,7 @@ public class RobberAI : MonoBehaviour
             agent.ResetPath();
             stealTimer = stealDuration;
             detectedByScan = false;
-            currentState = RobberState.Stealing;
+            currentState = ThiefState.Stealing;
             return;
         }
 
@@ -110,27 +110,26 @@ public class RobberAI : MonoBehaviour
     }
 
     // ---------------- Steal ----------------
-        void DoSteal()
+    void DoSteal()
     {
         if (targetItem == null || targetItem.IsStolen)
         {
-            currentState = RobberState.Roaming;
+            currentState = ThiefState.Roaming;
             return;
         }
 
         stealTimer -= Time.deltaTime;
         if (stealTimer > 0f) return;
 
-        // CCTV check: 25% if watched, 100% if not
         float chance = IsWatchedByActiveCamera() ? stealChanceCameraActive : 1f;
         bool success = Random.value <= chance;
 
         GameplayUI ui = FindFirstObjectByType<GameplayUI>();
 
-       if (success)
+        if (success)
         {
             targetItem.Steal();
-            stolenItems.Add(targetItem);   // add to list
+            stolenItems.Add(targetItem);
             if (ui != null) ui.SetDialogue("Thief has stolen the " + targetItem.name + "!");
         }
         else
@@ -138,9 +137,8 @@ public class RobberAI : MonoBehaviour
             if (ui != null) ui.SetDialogue("Thief failed to steal the " + targetItem.name + ".");
         }
 
-
         targetItem = null;
-        currentState = RobberState.Roaming;
+        currentState = ThiefState.Roaming;
     }
 
     // ---------------- Camera Check ----------------
@@ -189,46 +187,44 @@ public class RobberAI : MonoBehaviour
     // ---------------- OnDetectedByScan ----------------
     public void OnDetectedByScan()
     {
-        // Dialogue feedback when CCTV spots a robber
         GameplayUI ui = FindFirstObjectByType<GameplayUI>();
-        if (ui != null) ui.SetDialogue("A robber has been spotted by CCTV!");
+        if (ui != null) ui.SetDialogue("A thief has been spotted by CCTV!");
     }
 
-   // ---------------- Catch ----------------
-        public void Catch()
-{
-    if (currentState == RobberState.Caught) return;
-    currentState = RobberState.Caught;
-    agent?.ResetPath();
-
-    GameplayUI ui = FindFirstObjectByType<GameplayUI>();
-    if (stolenItems.Count > 0)
+    // ---------------- Catch ----------------
+    public void Catch()
     {
-        foreach (StealableItem item in stolenItems)
+        if (currentState == ThiefState.Caught) return;
+        currentState = ThiefState.Caught;
+        agent?.ResetPath();
+
+        GameplayUI ui = FindFirstObjectByType<GameplayUI>();
+        if (stolenItems.Count > 0)
         {
-            item.Restore();
+            foreach (StealableItem item in stolenItems)
+            {
+                item.Restore();
+            }
+
+            if (ui != null)
+            {
+                string itemNames = string.Join(", ", stolenItems.Select(i => i.name));
+                ui.SetDialogue("Thief has been caught and the following items are recovered: " + itemNames);
+                ui.CatchThief();
+            }
+
+            stolenItems.Clear();
+        }
+        else
+        {
+            if (ui != null)
+            {
+                ui.SetDialogue("The Thief has been caught!");
+                ui.CatchThief();
+            }
         }
 
-        if (ui != null)
-        {
-            string itemNames = string.Join(", ", stolenItems.Select(i => i.name));
-            ui.SetDialogue("Thief has been caught and the following items are recovered: " + itemNames);
-            ui.CatchThief();   // increment thief count in UI
-        }
-
-        stolenItems.Clear();
+        Debug.Log(name + " caught!");
+        Destroy(gameObject);
     }
-    else
-    {
-        if (ui != null)
-        {
-            ui.SetDialogue("The Thief has been caught!");
-            ui.CatchThief();   // increment thief count in UI
-        }
-    }
-
-    Debug.Log(name + " caught!");
-    Destroy(gameObject);
-}
-
 }

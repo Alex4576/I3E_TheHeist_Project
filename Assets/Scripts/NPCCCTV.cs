@@ -30,13 +30,13 @@ public class NPCCCTV : MonoBehaviour
         {
             scanTimer -= Time.deltaTime;
 
-            // Check for robbers in range
-            RobberAI[] robbers = FindObjectsByType<RobberAI>(FindObjectsSortMode.None);
-            foreach (RobberAI robber in robbers)
+            // Check for thieves in range
+            ThiefAI[] thieves = FindObjectsByType<ThiefAI>(FindObjectsSortMode.None);
+            foreach (ThiefAI thief in thieves)
             {
-                if (robber == null) continue;
-                if (Vector3.Distance(transform.position, robber.transform.position) <= scanRadius)
-                    robber.OnDetectedByScan(); // now compiles cleanly
+                if (thief == null) continue;
+                if (Vector3.Distance(transform.position, thief.transform.position) <= scanRadius)
+                    thief.OnDetectedByScan();
             }
 
             if (scanTimer <= 0f)

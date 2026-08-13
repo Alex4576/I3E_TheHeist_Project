@@ -6,50 +6,37 @@ using TMPro;
 /// <summary>
 /// PlayerScript.cs
 /// Handles player persistence across scenes, teleportation to SpawnPoints,
-/// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Robber catch, Visitor catch).
+/// and interaction with NPC objects (CCTV repair/scan, Hacker catch, Thief catch, Visitor catch).
 /// Prompts are shown via UIController if assigned, otherwise fall back to interactionText.
 /// </summary>
 public class PlayerScript : MonoBehaviour
 {
     [Header("Interaction Settings")]
-    [SerializeField] float interactDistance = 3f;          // Max distance for raycast interaction
-    [SerializeField] Camera playerCamera;                   // First-person camera
-    [SerializeField] TMP_Text interactionText;              // Fallback UI prompt text
-    [SerializeField] UIController uiController;             // Preferred UI prompt system
+    [SerializeField] float interactDistance = 3f;          
+    [SerializeField] Camera playerCamera;                   
+    [SerializeField] TMP_Text interactionText;              
+    [SerializeField] UIController uiController;             
 
     void Awake()
     {
-        // Prevent duplicate players if one already exists
         if (FindObjectsByType<PlayerScript>(FindObjectsSortMode.None).Length > 1)
         {
             Destroy(gameObject);
             return;
         }
-
-        // Keep this Player alive across scene loads (persists the whole hierarchy root)
         DontDestroyOnLoad(transform.root.gameObject);
     }
 
-    void OnEnable()
-    {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
+    void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+    void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // UIController lives in the scene (not persisted), so re-find it after every load
         uiController = FindFirstObjectByType<UIController>();
 
-        // Reset UI prompt when entering new scene
         if (interactionText != null)
             interactionText.gameObject.SetActive(false);
 
-        // Move to SpawnPoint if present
         GameObject spawn = GameObject.Find("SpawnPoint");
         if (spawn != null)
         {
@@ -58,85 +45,44 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        HandleInteraction();
-    }
+    void Update() => HandleInteraction();
 
-    /// <summary>
-    /// Handles raycast interaction with CCTV (repair + scan), Hacker, Robber, and Visitor.
-    /// </summary>
     void HandleInteraction()
     {
         ClearInteractionPrompt();
 
-        if (playerCamera == null)
-            return;
+        if (playerCamera == null) return;
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance))
         {
-            // CCTV repair prompt
             NPCCCTV cctv = hit.collider.GetComponentInParent<NPCCCTV>();
             if (cctv != null && cctv.currentState == NPCCCTV.CameraState.Disabled)
             {
                 ShowInteractionPrompt("CCTV", "[E] Repair");
-
-                if (Keyboard.current.eKey.wasPressedThisFrame)
-                {
-                    cctv.RepairCamera();
-                }
+                if (Keyboard.current.eKey.wasPressedThisFrame) cctv.RepairCamera();
             }
-            // CCTV scan prompt
             else if (cctv != null && cctv.IsActive() && !cctv.IsScanOnCooldown())
             {
-                ShowInteractionPrompt("CCTV", "[F] Scan for Robbers");
-
-                if (Keyboard.current.fKey.wasPressedThisFrame)
-                {
-                    cctv.ToggleScan();
-                }
+                ShowInteractionPrompt("CCTV", "[F] Scan for Thieves");
+                if (Keyboard.current.fKey.wasPressedThisFrame) cctv.ToggleScan();
             }
 
-            // Hacker catch (no prompt shown)
             NPCHacker hacker = hit.collider.GetComponentInParent<NPCHacker>();
-            if (hacker != null)
-            {
-                if (Keyboard.current.eKey.wasPressedThisFrame)
-                {
-                    hacker.Catch();
-                }
-            }
+            if (hacker != null && Keyboard.current.eKey.wasPressedThisFrame) hacker.Catch();
 
-            // Robber catch (no prompt shown)
-            RobberAI robber = hit.collider.GetComponentInParent<RobberAI>();
-            if (robber != null)
-            {
-                if (Keyboard.current.eKey.wasPressedThisFrame)
-                {
-                    robber.Catch();
-                }
-            }
+            ThiefAI thief = hit.collider.GetComponentInParent<ThiefAI>();
+            if (thief != null && Keyboard.current.eKey.wasPressedThisFrame) thief.Catch();
 
-            // Visitor catch (no prompt shown)
             NPCVisitor visitor = hit.collider.GetComponentInParent<NPCVisitor>();
-            if (visitor != null)
-            {
-                if (Keyboard.current.eKey.wasPressedThisFrame)
-                {
-                    visitor.CatchVisitor();
-                }
-            }
+            if (visitor != null && Keyboard.current.eKey.wasPressedThisFrame) visitor.CatchVisitor();
         }
     }
 
     void ShowInteractionPrompt(string header, string action)
     {
-        if (uiController != null)
-        {
-            uiController.ShowPrompt(header, action);
-        }
+        if (uiController != null) uiController.ShowPrompt(header, action);
         else if (interactionText != null)
         {
             interactionText.gameObject.SetActive(true);
@@ -146,10 +92,7 @@ public class PlayerScript : MonoBehaviour
 
     void ClearInteractionPrompt()
     {
-        if (uiController != null)
-            uiController.ClearPrompt();
-
-        if (interactionText != null)
-            interactionText.gameObject.SetActive(false);
+        if (uiController != null) uiController.ClearPrompt();
+        if (interactionText != null) interactionText.gameObject.SetActive(false);
     }
 }

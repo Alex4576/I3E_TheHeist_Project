@@ -83,7 +83,7 @@ public class GameplayUI : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
 
         UpdateObjectives();
-        dialogueText.text = "Refresh your knowledge of crime prevention,\n\nHead towards the exhibition area and interact with a Kiosk to complete a Quiz";
+        dialogueText.text = "Refresh your knowledge of crime prevention,\n\nHead towards the Exhibition area and interact with a Kiosk to complete a Quiz";
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public class GameplayUI : MonoBehaviour
     {
         quizCompleted = true;
         UpdateObjectives();
-        dialogueText.text = "Please head towards the Gallery using the Lift in this room.";
+        dialogueText.text = "Please head to the Gallery using the Lift in the Exhibition area.";
     }
 
     /// <summary>
