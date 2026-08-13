@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 /// <summary>
 /// Manages the persistent gameplay UI including objectives, dialogue,
@@ -30,6 +31,15 @@ public class GameplayUI : MonoBehaviour
     [Header("Timer Settings")]
     [SerializeField] private float startTime = 480f;         
     /// <summary>Starting time in seconds (default 8 minutes).</summary>
+    
+    [SerializeField] private string wave2SceneName;         // Scene name for Wave 2
+    [SerializeField] private string finalWaveSceneName;     // Scene name for Final Wave
+
+    private int currentWaveIndex = 0; // 0 = Wave1, 1 = Wave2, 2 = Final Wave
+
+   // Required catches per wave
+    private int[] thievesPerWave = { 2, 1, 2 };
+    private int[] hackersPerWave = { 0, 1, 2 };
 
     private float currentTime;                               /// <summary>Current countdown time.</summary>
     private bool quizCompleted = false;                      /// <summary>Tracks whether the quiz is completed.</summary>
@@ -156,12 +166,43 @@ public class GameplayUI : MonoBehaviour
             "   Thief: " + thiefCaught + "/5\n" +
             "   Hacker: " + hackerCaught + "/3";
 
-            // Check winning condition
-           if (quizCompleted && thiefCaught >= 5 && hackerCaught >= 3)
+        if (quizCompleted)
+        {
+            // Calculate cumulative requirements up to current wave
+            int requiredThieves = 0;
+            int requiredHackers = 0;
+            for (int i = 0; i <= currentWaveIndex; i++)
             {
-                WinGame();
-            }  
+                requiredThieves += thievesPerWave[i];
+                requiredHackers += hackersPerWave[i];
+            }
+
+            // Advance only when all thieves/hackers for this wave are caught
+            if (thiefCaught >= requiredThieves && hackerCaught >= requiredHackers)
+            {
+                if (currentWaveIndex < 2)
+                {
+                    TriggerNextWave();
+                }
+                else
+                {
+                    WinGame();
+                }
+            }
+        }
     }
+
+
+// ---------------- Wave Transition Methods ----------------
+void TriggerNextWave()
+{
+    if (currentWaveIndex == 0)
+        SceneManager.LoadScene(wave2SceneName);
+    else if (currentWaveIndex == 1)
+        SceneManager.LoadScene(finalWaveSceneName);
+
+    currentWaveIndex++;
+}
 
     /// <summary>
     /// Updates the dialogue text shown to the player.
@@ -178,6 +219,7 @@ public class GameplayUI : MonoBehaviour
     void WinGame()
     {
         if (winPanel != null) winPanel.SetActive(true);
+
         Time.timeScale = 0f;
     }
 
@@ -187,6 +229,7 @@ public class GameplayUI : MonoBehaviour
     void LoseGame()
     {
         if (losePanel != null) losePanel.SetActive(true);
+
         Time.timeScale = 0f;
     }
 
