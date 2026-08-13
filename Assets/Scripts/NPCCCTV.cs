@@ -112,7 +112,6 @@ public class NPCCCTV : MonoBehaviour
             {
                 subText.text = "Movement recorded near the Gramophone exhibit.";
             }
-
             else
             {
                 if (statusText != null)
@@ -152,7 +151,15 @@ public class NPCCCTV : MonoBehaviour
         {
             uiController.ShowInteractionUI();
         }
+
+        // Restore GameplayUI after scan ends
+        GameplayUI gameplayUI = FindFirstObjectByType<GameplayUI>();
+        if (gameplayUI != null)
+        {
+            gameplayUI.ShowUI(); // bring back objectives panel
+        }
     }
+
 
     // ---------------- Disable ----------------
 
@@ -279,6 +286,7 @@ public class NPCCCTV : MonoBehaviour
 
         if (ui != null)
         {
+            ui.HideUI();
             ui.SetDialogue("CCTV scan activated!");
         }
 
