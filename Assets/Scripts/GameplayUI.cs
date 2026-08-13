@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Manages the persistent gameplay UI including objectives, dialogue,
@@ -89,8 +90,16 @@ public class GameplayUI : MonoBehaviour
     /// <summary>
     /// Updates timer countdown each frame and checks for lose condition.
     /// </summary>
-    void Update()
+   void Update()
     {
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (isPaused)
+                ContinueGame();
+            else
+                OpenPauseMenu();
+        }
+
         if (!isPaused)
         {
             if (currentTime > 0)
