@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 263304f45c3f8af4da7440efe0bbfc9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneChangerTrigger
-  sceneToGoIndex: 3
+  sceneToGoIndex: 4
 --- !u!65 &287673341
 BoxCollider:
   m_ObjectHideFlags: 0

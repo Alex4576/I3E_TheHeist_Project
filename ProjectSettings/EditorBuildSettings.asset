@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/StartScene.unity
+    guid: c14b347b0db60c74386f666d954df35f
+  - enabled: 1
     path: Assets/Scenes/MuseumScene.unity
     guid: cfd64f9fb2cce0b4f889d4225c980295
   - enabled: 1
@@ -15,7 +18,7 @@ EditorBuildSettings:
     path: Assets/Scenes/QuizRoomScene.unity
     guid: 586ac722a72d07c41b6c85b7b7e37c91
   - enabled: 1
-    path: Assets/Scenes/GalleryScene.unity
+    path: Assets/Scenes/galleryscene.unity
     guid: 0a33732bad67c004e9dfde580477a752
   - enabled: 1
     path: Assets/Scenes/GallerySceneWave2.unity
