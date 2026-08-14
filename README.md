@@ -4,7 +4,7 @@
 
 **Group Name:** Exhibit Three  
 **Group Members:** Alex, Kayden, Sheryn  
-**Game Name:** The Heist
+**Game Name:** The Heist  
 **Github Respository:** https://github.com/Alex4576/I3E_TheHeist_Project
 
 ## Game Overview
@@ -65,7 +65,7 @@ The visitor's movement speed is obtained from the NavMeshAgent's velocity and pa
 
 #### FSM Diagram
 
-![NPC Visitor FSM Diagram](ReadMeImages/VisitorFSM.png)
+![NPC Visitor FSM Diagram](Assets/ReadMeImages/VisitorFSM.png)
 
 ### 2. NPC Hacker
 
@@ -87,7 +87,7 @@ The Hacker's movement speed is passed to the Animator through the Speed float pa
 
 #### FSM Diagram
 
-![NPC Hacker FSM Diagram](ReadMeImages/HackerFSM.png)
+![NPC Hacker FSM Diagram](Assets/ReadMeImages/HackerFSM.png)
 
 ### 3. NPC Thief
 
@@ -109,7 +109,7 @@ When the player correctly identifies and catches the Thief, it enters the `Caugh
 
 #### FSM Diagram
 
-![NPC Thief FSM Diagram](ReadMeImages/ThiefFSM.png)
+![NPC Thief FSM Diagram](Assets/ReadMeImages/ThiefFSM.png)
 
 ### 4. NPC CCTV
 
@@ -129,7 +129,7 @@ The CCTV can be disabled when the Hacker successfully calls `DisableCamera()`. W
 
 #### FSM Diagram
 
-![NPC CCTV FSM Diagram](ReadMeImages/CCTVFSM.png)
+![NPC CCTV FSM Diagram](Assets/ReadMeImages/CCTVFSM.png)
 
 ## Puzzle Answers
 
