@@ -344,12 +344,20 @@ public class GameplayUI : MonoBehaviour
     // ---------------- UI Visibility ----------------
 
     /// <summary>
-    /// Shows the full GameplayUI object (objectives and dialogue).
+    /// Shows the main HUD canvas (gameUI child object).
+    /// The GameplayUI root stays active so FindFirstObjectByType always works.
     /// </summary>
-    public void ShowUI() => gameObject.SetActive(true);
+    public void ShowUI()
+    {
+        if (gameUI != null) gameUI.SetActive(true);
+    }
 
     /// <summary>
-    /// Hides the full GameplayUI object (objectives and dialogue).
+    /// Hides the main HUD canvas (gameUI child object).
+    /// The GameplayUI root stays active so FindFirstObjectByType always works.
     /// </summary>
-    public void HideUI() => gameObject.SetActive(false);
+    public void HideUI()
+    {
+        if (gameUI != null) gameUI.SetActive(false);
+    }
 }
