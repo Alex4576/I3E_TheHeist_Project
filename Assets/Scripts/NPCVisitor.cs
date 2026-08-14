@@ -71,7 +71,7 @@ public class NPCVisitor : MonoBehaviour
 
     /// <summary>
     /// Handles the player incorrectly catching a normal visitor.
-    /// Deducts 10 seconds from the gameplay timer and displays
+    /// Deducts 60 seconds from the gameplay timer and displays
     /// feedback informing the player that the wrong person was caught.
     /// </summary>
     public void CatchVisitor()
@@ -80,11 +80,11 @@ public class NPCVisitor : MonoBehaviour
         GameplayUI ui = FindFirstObjectByType<GameplayUI>();
         if (ui != null)
         {
-            // Deduct 10 seconds from the global countdown
-            ui.AdjustTimer(-10f);
+            // Deduct 60 seconds from the global countdown
+            ui.AdjustTimer(-60f);
 
             // Show dialogue feedback
-            ui.SetDialogue("That person is not involved in the heist... 10 seconds deducted from timer.");
+            ui.SetDialogue("That person is not involved in the heist... 60 seconds deducted from timer.");
         }
     }
 }
